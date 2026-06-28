@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface Props {
   beforeSrc: string;
@@ -9,60 +9,41 @@ interface Props {
 }
 
 export default function CompareSlider({ beforeSrc, afterSrc, alt }: Props) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const dragging = useRef(false);
-  const [percent, setPercent] = useState(50);
+  const [showAfter, setShowAfter] = useState(false);
 
   useEffect(() => {
-    function onPointerMove(e: PointerEvent) {
-      if (!dragging.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      let p = (x / rect.width) * 100;
-      if (p < 0) p = 0;
-      if (p > 100) p = 100;
-      setPercent(p);
-    }
+    // Sync all components by using a standard interval
+    const interval = setInterval(() => {
+      setShowAfter((prev) => !prev);
+    }, 3500); 
 
-    function onPointerUp() {
-      dragging.current = false;
-    }
-
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-    return () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-    };
+    return () => clearInterval(interval);
   }, []);
 
-  function startDrag(e: React.PointerEvent) {
-    dragging.current = true;
-    try {
-      (e.target as Element).setPointerCapture?.(e.pointerId);
-    } catch {}
-  }
-
   return (
-    <div ref={containerRef} className="relative h-full w-full select-none overflow-hidden rounded-[1.25rem] bg-slate-100">
-      <img src={beforeSrc} alt={alt ?? 'Before'} className="absolute inset-0 h-full w-full object-contain" />
+    <div className="relative w-full aspect-square select-none overflow-hidden rounded-2xl bg-slate-50 shadow-inner border border-gray-200">
+      {/* Before Image */}
+      <img 
+        src={beforeSrc} 
+        alt={alt ?? 'Before'} 
+        className="absolute inset-0 h-full w-full object-contain object-center p-4" 
+      />
 
-      <div className="absolute inset-0 overflow-hidden" style={{ width: `${percent}%` }}>
-        <img src={afterSrc} alt={alt ?? 'After'} className="h-full w-full object-contain" />
-      </div>
-
-      <div
-        role="slider"
-        aria-valuenow={Math.round(percent)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        onPointerDown={startDrag}
-        className="absolute top-0 bottom-0 z-10 flex items-center justify-center cursor-ew-resize"
-        style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
-      >
-        <div className="flex h-7 w-7 items-center justify-center rounded-full border border-white/90 bg-[#0f5bff] ring-4 ring-[#0f5bff]/20">
-          <div className="h-1.5 w-1.5 rounded-full bg-white" />
-        </div>
+      {/* After Image (Top-left diagonal wipe reveal) */}
+      <img 
+        src={afterSrc} 
+        alt={alt ?? 'After'} 
+        className="absolute inset-0 h-full w-full object-contain object-center p-4 transition-all duration-[2000ms] ease-in-out"
+        style={{
+          clipPath: showAfter 
+            ? 'circle(150% at 0% 0%)' 
+            : 'circle(0% at 0% 0%)'   
+        }}
+      />
+      
+      {/* Context Badge */}
+      <div className="absolute bottom-3 right-3 z-10 rounded-full bg-slate-900/70 px-2 py-1 text-[10px] font-bold tracking-widest text-white backdrop-blur-md uppercase transition-all duration-500">
+        {showAfter ? 'After' : 'Before'}
       </div>
     </div>
   );
