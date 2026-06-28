@@ -2,8 +2,17 @@ import Image from 'next/image';
 import CompareSlider from './components/CompareSlider';
 import FAQAccordion from './components/FAQAccordion';
 import Uploader from './components/Uploader';
+import { supabase } from '@/lib/supabaseClient'; // Added import
 
 export default function Home() {
+  
+  // Temporary test code for Supabase connection
+  const testSupabase = async () => {
+    const { data, error } = await supabase.from('profiles').select('*');
+    console.log('Database Result:', data, error);
+  };
+  testSupabase(); 
+
   return (
     <main className="min-h-screen bg-white text-gray-900 font-sans">
       {/* Header */}
