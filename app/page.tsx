@@ -8,9 +8,10 @@ export default function Home() {
   
   // Temporary test code for Supabase connection
   const testSupabase = async () => {
-    console.log("Supabase test starting..."); // Check if this prints
+    alert("Test script is running!"); // If you don't see this, the code isn't running
     const { data, error } = await supabase.from('profiles').select('*');
     console.log('Database Result:', data, error);
+    alert("Check console for results!");
   };
   testSupabase(); 
 
