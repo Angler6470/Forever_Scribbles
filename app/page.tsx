@@ -1,19 +1,23 @@
+'use client'; 
+
+import { useEffect } from 'react';
 import Image from 'next/image';
 import CompareSlider from './components/CompareSlider';
 import FAQAccordion from './components/FAQAccordion';
 import Uploader from './components/Uploader';
-import { supabase } from '@/lib/supabaseClient'; // Added import
+import { supabase } from '@/lib/supabaseClient';
 
 export default function Home() {
   
-  // Temporary test code for Supabase connection
-  const testSupabase = async () => {
-    alert("Test script is running!"); // If you don't see this, the code isn't running
-    const { data, error } = await supabase.from('profiles').select('*');
-    console.log('Database Result:', data, error);
-    alert("Check console for results!");
-  };
-  testSupabase(); 
+  // This hook ensures the database check only runs in the browser,
+  // preventing server-side "ReferenceError" issues during Vercel builds.
+  useEffect(() => {
+    const testSupabase = async () => {
+      const { data, error } = await supabase.from('profiles').select('*');
+      console.log('Database Result:', data, error);
+    };
+    testSupabase();
+  }, []);
 
   return (
     <main className="min-h-screen bg-white text-gray-900 font-sans">
@@ -31,7 +35,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Section (Centered with 3-Column Grid) */}
+      {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-6 py-20 flex flex-col items-center text-center gap-12">
         <div className="max-w-3xl space-y-6">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
@@ -45,7 +49,6 @@ export default function Home() {
           </a>
         </div>
         
-        {/* Inlined 3-Column Sliders with Staggered Delays */}
         <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
            <CompareSlider beforeSrc="/1_before.png" afterSrc="/1_after.png" />
            <CompareSlider beforeSrc="/2_before.png" afterSrc="/2_after.png" />
@@ -53,32 +56,28 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works (3 Steps) */}
+      {/* How It Works */}
       <section id="how-it-works" className="bg-gray-50 py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-4xl font-bold mb-12">Three Simple Steps</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Step 1 */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border-t-4 border-blue-600 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-default">
-              <h3 className="text-2xl font-bold mb-4">1. Capture the Masterpiece</h3>
-              <p className="text-gray-600">Take a quick photo of your child's messy doodle and drop it here.</p>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border-t-4 border-blue-600 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+              <h3 className="text-2xl font-bold mb-4">1. Capture</h3>
+              <p className="text-gray-600">Take a photo of the doodle and drop it here.</p>
             </div>
-            {/* Step 2 */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border-t-4 border-red-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-default">
-              <h3 className="text-2xl font-bold mb-4">2. Watch the Transformation</h3>
-              <p className="text-gray-600">We instantly strip away the noise, leaving a perfect, uniform outline.</p>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border-t-4 border-red-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+              <h3 className="text-2xl font-bold mb-4">2. Transform</h3>
+              <p className="text-gray-600">We instantly strip the noise and create an outline.</p>
             </div>
-            {/* Step 3 */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border-t-4 border-yellow-400 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-default">
-              <h3 className="text-2xl font-bold mb-4">3. Print & Color</h3>
-              <p className="text-gray-600">Download your crisp new coloring page and grab the crayons.</p>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border-t-4 border-yellow-400 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+              <h3 className="text-2xl font-bold mb-4">3. Print</h3>
+              <p className="text-gray-600">Download your page and start coloring.</p>
             </div>
           </div>
         </div>
       </section>
 
       <Uploader />
-
       <FAQAccordion />
     </main>
   );
