@@ -1,23 +1,11 @@
 'use client'; 
 
-import { useEffect } from 'react';
 import Image from 'next/image';
 import CompareSlider from './components/CompareSlider';
 import FAQAccordion from './components/FAQAccordion';
 import Uploader from './components/Uploader';
-import { supabase } from '@/lib/supabaseConfig';
 
 export default function Home() {
-  
-  useEffect(() => {
-    alert("HEY! The JavaScript is running!"); // If you don't see this, the site isn't loading the file
-    const testSupabase = async () => {
-      const { data, error } = await supabase.from('profiles').select('*');
-      console.log('Database Result:', data, error);
-    };
-    testSupabase();
-  }, []);
-
   return (
     <main className="min-h-screen bg-white text-gray-900 font-sans">
       {/* Header */}
@@ -50,7 +38,7 @@ export default function Home() {
         
         <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
            <CompareSlider beforeSrc="/1_before.png" afterSrc="/1_after.png" />
-           <CompareSlider beforeSrc="/2_before.png" afterSrc="/2_after.png" />
+           <CompareSlider beforeSrc="/2_before.png" afterSrc="/3_after.png" />
            <CompareSlider beforeSrc="/3_before.png" afterSrc="/3_after.png" />
         </div>
       </section>
