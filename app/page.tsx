@@ -13,8 +13,18 @@ export default function Home() {
   // preventing server-side "ReferenceError" issues during Vercel builds.
   useEffect(() => {
     const testSupabase = async () => {
-      const { data, error } = await supabase.from('profiles').select('*');
-      console.log('Database Result:', data, error);
+      try {
+        const { data, error } = await supabase.from('profiles').select('*');
+        if (error) {
+          console.error("Database Error:", error.message);
+          alert("Database Error! Check console.");
+        } else {
+          console.log("Database Result:", data);
+          alert("Connection Success! Data: " + JSON.stringify(data));
+        }
+      } catch (err) {
+        console.error("Unexpected Error:", err);
+      }
     };
     testSupabase();
   }, []);
