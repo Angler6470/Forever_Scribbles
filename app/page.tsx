@@ -10,18 +10,10 @@ import { supabase } from '@/lib/supabaseConfig';
 export default function Home() {
   
   useEffect(() => {
+    alert("HEY! The JavaScript is running!"); // If you don't see this, the site isn't loading the file
     const testSupabase = async () => {
-      try {
-        console.log("Checking Supabase connection...");
-        const { data, error } = await supabase.from('profiles').select('*');
-        if (error) {
-          console.error("Database Error:", error.message);
-        } else {
-          console.log("Database Result:", data);
-        }
-      } catch (err) {
-        console.error("Unexpected Error:", err);
-      }
+      const { data, error } = await supabase.from('profiles').select('*');
+      console.log('Database Result:', data, error);
     };
     testSupabase();
   }, []);
