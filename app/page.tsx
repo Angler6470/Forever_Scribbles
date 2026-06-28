@@ -5,22 +5,19 @@ import Image from 'next/image';
 import CompareSlider from './components/CompareSlider';
 import FAQAccordion from './components/FAQAccordion';
 import Uploader from './components/Uploader';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseConfig';
 
 export default function Home() {
   
-  // This hook ensures the database check only runs in the browser,
-  // preventing server-side "ReferenceError" issues during Vercel builds.
   useEffect(() => {
     const testSupabase = async () => {
       try {
+        console.log("Checking Supabase connection...");
         const { data, error } = await supabase.from('profiles').select('*');
         if (error) {
           console.error("Database Error:", error.message);
-          alert("Database Error! Check console.");
         } else {
           console.log("Database Result:", data);
-          alert("Connection Success! Data: " + JSON.stringify(data));
         }
       } catch (err) {
         console.error("Unexpected Error:", err);
