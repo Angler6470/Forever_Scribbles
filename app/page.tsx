@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import CompareSlider from './components/CompareSlider';
 import FAQAccordion from './components/FAQAccordion';
+import Uploader from './components/Uploader';
 
 export default function Home() {
   return (
@@ -65,16 +66,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Upload Section */}
-      <section id="upload" className="max-w-4xl mx-auto py-24 px-6 text-center">
-        <h2 className="text-4xl font-bold mb-8">Ready to rescue a doodle?</h2>
-        <div className="border-4 border-dashed border-blue-600 bg-blue-50 rounded-3xl p-16">
-          <p className="text-2xl font-bold text-blue-800 mb-4">Drag & Drop a Drawing Here</p>
-          <button className="bg-blue-600 text-white font-bold px-8 py-3 rounded-full hover:bg-blue-700">
-            Choose a File
-          </button>
-        </div>
-      </section>
+      <Uploader />
 
       <FAQAccordion />
     </main>
