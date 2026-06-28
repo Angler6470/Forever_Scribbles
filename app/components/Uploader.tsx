@@ -1,85 +1,55 @@
 'use client';
+
 import { useState } from 'react';
+import { supabase } from '@/lib/supabaseConfig';
 
 export default function Uploader() {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB limit
-  const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      const file = event.target.files?.[0];
+      if (!file) return;
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
 
-    // Validation checks
-    setError(null);
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError('Please upload a valid image (JPG, PNG, or WebP).');
-      return;
+      // 1. Upload to Supabase Storage Bucket 'user-uploads'
+      const { error: uploadError } = await supabase.storage
+        .from('user-uploads')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('user-uploads')
+        .getPublicUrl(filePath);
+
+      alert(`Upload Success! Link: ${publicUrlData.publicUrl}`);
+      console.log("File URL:", publicUrlData.publicUrl);
+
+    } catch (error) {
+      alert('Error uploading file!');
+      console.error(error);
+    } finally {
+      setUploading(false);
     }
-    if (file.size > MAX_FILE_SIZE) {
-      setError('File is too large! Please keep it under 5MB.');
-      return;
-    }
-
-    setLoading(true);
-    
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      try {
-        const response = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: reader.result }),
-        });
-        
-        const data = await response.json();
-        if (data.result) {
-          setResult(data.result[0]);
-        } else {
-          setError('Conversion failed to process. Try a different drawing.');
-        }
-      } catch (err) {
-        setError('Something went wrong. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
   };
 
   return (
-    <section id="upload" className="max-w-4xl mx-auto py-24 px-6 text-center">
-      <h2 className="text-4xl font-bold mb-8">Ready to convert the doodle?</h2>
-      
-      {/* Error Message Display */}
-      {error && <p className="text-red-500 font-bold mb-4">{error}</p>}
-
-      <div className="border-4 border-dashed border-blue-600 bg-blue-50 rounded-3xl p-16 flex flex-col items-center justify-center">
-        {!result && !loading && (
-          <>
-            <p className="text-2xl font-bold text-blue-800 mb-4">Select a drawing here</p>
-            <label className="cursor-pointer bg-blue-600 text-white font-bold px-8 py-3 rounded-full hover:bg-blue-700 transition">
-              Choose a File
-              <input type="file" className="hidden" accept={ACCEPTED_TYPES.join(',')} onChange={handleUpload} />
-            </label>
-          </>
-        )}
-
-        {loading && <p className="text-xl font-bold text-blue-600 animate-pulse">We're performing the magic...</p>}
-
-        {result && (
-          <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-green-600">Success!</h3>
-            <img src={result} alt="Coloring Page" className="max-h-96 rounded-xl border-2 border-slate-200" />
-            <button onClick={() => { setResult(null); setError(null); }} className="mt-4 text-blue-600 font-bold underline">
-              Upload another one
-            </button>
-          </div>
-        )}
-      </div>
-    </section>
+    <div id="upload" className="max-w-xl mx-auto p-8 bg-white border border-slate-200 rounded-2xl my-12">
+      <h2 className="text-2xl font-bold mb-4">Upload your doodle</h2>
+      <input 
+        type="file" 
+        accept="image/*" 
+        onChange={handleUpload} 
+        disabled={uploading}
+        className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+      />
+      {uploading && <p className="mt-4 text-blue-600 font-bold">Uploading...</p>}
+    </div>
   );
 }
