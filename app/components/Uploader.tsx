@@ -40,7 +40,7 @@ export default function Uploader() {
     try {
       const formData = new FormData();
       formData.append('image', file);
-      formData.append('prompt', 'Turn this into a crisp, clean coloring book page outline. Black and white only.');
+      formData.append('prompt', 'A black and white coloring book page outline of the uploaded image, clean lines, high contrast, no shading.');
 
       const response = await fetch('/api/generate', {
         method: 'POST',
