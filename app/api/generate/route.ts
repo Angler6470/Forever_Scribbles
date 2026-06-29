@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import Replicate from 'replicate';
 
-const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
+const replicate = new Replicate({ auth: 'r8_VvuFOdsJ0ODFqeWP7XeBRJ5zWlM4zMe2zqBRN'
+ });
 
 // Simple in-memory store for rate limiting (Note: This resets when Vercel restarts)
 const requestCounts = new Map<string, { count: number; lastReset: number }>();
