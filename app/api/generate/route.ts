@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       model: "google/nano-banana-2",
       input: {
         image: dataUrl,
-        prompt: "A crisp, clean black and white line art coloring book page. Focus only on the lines of the provided sketch. No shading, no background.",
+        prompt: "A Black and white version of this image made into a coloring book page. Same line work. No color.",
       },
     });
 
