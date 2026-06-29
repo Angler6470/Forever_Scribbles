@@ -19,24 +19,21 @@ export async function POST(req: NextRequest) {
     const base64 = buffer.toString('base64');
     const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // Using the official edge-guided flux-canny-pro model
-    // This model is optimized to preserve your sketch's structure
-    const output = await replicate.run(
-      "black-forest-labs/flux-canny-pro",
+    // Using the exact model path and structure from the API help section
+    const output: any = await replicate.run(
+      "jagilley/controlnet-canny:aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613",
       {
         input: {
           image: dataUrl,
-          prompt: "A crisp, professional black and white coloring book page. High contrast, clean thick lines, white background, no shading, no color.",
-          control_strength: 1.0, // Ensures it strictly follows your sketch
-          aspect_ratio: "1:1"
+          prompt: "A Black and white version of this image made into a coloring book page. Same line work. No color.",
         }
       }
     );
 
-    // The output is an array of strings
-    const imageUrl = Array.isArray(output) ? output[0] : output;
+    // Based on the docs, output is an array. We grab the first result.
+    const resultUrl = Array.isArray(output) ? output[0] : output;
 
-    return NextResponse.json({ result: imageUrl });
+    return NextResponse.json({ result: resultUrl });
   } catch (error: any) {
     console.error('API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
