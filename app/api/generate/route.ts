@@ -7,6 +7,9 @@ const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
 const requestCounts = new Map<string, { count: number; lastReset: number }>();
 
 export async function POST(req: Request) {
+  if (!process.env.REPLICATE_API_TOKEN) {
+    return NextResponse.json({ error: "API Token is missing in environment!" }, { status: 500 });
+  }
   const ip = req.headers.get('x-forwarded-for') || 'anonymous';
   const masterPassword = req.headers.get('x-master-password');
 
