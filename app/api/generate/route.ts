@@ -19,16 +19,15 @@ export async function POST(req: NextRequest) {
     const base64 = Buffer.from(arrayBuffer).toString('base64');
     const dataUrl = `data:image/jpeg;base64,${base64}`;
 
-    // SWITCHING MODEL: ControlNet is designed to trace lines precisely.
-    // nano-banana-2 is struggling with your input.
     const prediction = await replicate.predictions.create({
-      model: "lucataco/controlnet-canny:628e81561664d422a5789d6e87265a6c567087617b7b13867c29e73142270034",
-      input: {
-        image: dataUrl,
-        prompt: "A Black and white coloring book page. Same line work as the original. No color, no shading, clean lines.",
-        num_inference_steps: 20
-      },
-    });
+  // Use the model name without the specific version hash
+  model: "lucataco/controlnet-canny", 
+  input: {
+    image: dataUrl,
+    prompt: "A Black and white coloring book page. Same line work as the original. No color, no shading, clean lines.",
+    num_inference_steps: 20
+  },
+});
 
     const result = await replicate.wait(prediction);
     return NextResponse.json({ result: result.output });
