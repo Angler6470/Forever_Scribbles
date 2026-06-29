@@ -5,35 +5,37 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
-    const formData = await req.formData();
-    const file = formData.get('image');
+    const token = process.env.REPLICATE_API_TOKEN;
+    if (!token) throw new Error('API token not configured');
 
-    if (!(file instanceof File)) throw new Error('No image provided');
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const base64 = buffer.toString('base64');
-    const dataUrl = `data:${file.type};base64,${base64}`;
-
-    // SWITCHED TO LINEART MODEL: This model ignores texture and focuses on outlines.
-    const prediction = await replicate.predictions.create({
-      model: "jagilley/controlnet-lineart",
-      version: "f4284523315a091533036413d7d748f2195821c97793d56d10c0e5a8767e7550",
-      input: {
-        image: dataUrl,
-        prompt: "A professional coloring book page outline, clean thick solid lines, white background, no shading, no texture, high contrast.",
+    const replicate = new Replicate({ auth: token });
+    
+    // We are using the specific model ID from your provided API help file
+    const output: any = await replicate.run(
+      "paappraiser/retro-coloring-book:cbaf592788a0513ff5ca3beecdc0d9280fb44908771656f2adef630a263d9ebe",
+      {
+        input: {
+          // We describe the content of your doodle so the AI creates a 
+          // high-quality, professional version of it.
+          prompt: "A large and simple drawing of an elephant, vintage coloring book style, minimal clean lines, thick outlines, easy to color, white background.",
+          negative_prompt: "complex, realistic, color, gradient, shading, texture, wavy lines"
+        }
       }
-    });
+    );
 
-    const result = await replicate.wait(prediction);
+    // According to your help file, output is an array. 
+    // We check for the .url() method or direct array access.
+    let resultUrl = "";
+    if (Array.isArray(output)) {
+        // Use the first item's .url() if available, otherwise just use the item
+        resultUrl = typeof output[0].url === 'function' ? output[0].url() : output[0];
+    } else {
+        resultUrl = output;
+    }
 
-    const output = (result as any).output;
-    const imageUrl = Array.isArray(output) ? output[0] : output;
-
-    console.log("FINAL URL TO LOAD:", imageUrl);
-
-    return NextResponse.json({ result: imageUrl });
+    return NextResponse.json({ result: resultUrl });
   } catch (error: any) {
+    console.error('API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
