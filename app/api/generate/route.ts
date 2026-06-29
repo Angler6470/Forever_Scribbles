@@ -14,30 +14,35 @@ export async function POST(req: NextRequest) {
 
     if (!(file instanceof File)) throw new Error('No image provided');
 
-    // Convert file to base64 Data URL for Replicate
     const buffer = Buffer.from(await file.arrayBuffer());
     const base64 = buffer.toString('base64');
     const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // We are using a public, stable image-to-image model.
-    // Note: If you want a different model, find the exact model:version string
-    // on the Replicate website under the 'API' tab for that specific model.
-    const model = "stability-ai/stable-diffusion-img2img:c46967525381f2679237090886c9b33a7e366e8574169542a2754636b04a9117";
-
-    const output: any = await replicate.run(model, {
-      input: {
-        image: dataUrl,
-        prompt: "A clean black and white coloring book page of this drawing, high contrast, solid lines, white background, no shading.",
-        strength: 0.5 // Controls how much it follows your original drawing
+    // 1. Run the model with the exact version hash provided in the API docs
+    const output: any = await replicate.run(
+      "jagilley/controlnet-canny:aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613",
+      {
+        input: {
+          image: dataUrl,
+          prompt: "A professional black and white coloring book page of the subject, clean line art, high contrast, white background.",
+        }
       }
-    });
+    );
 
-    // The output is an array of strings
-    const imageUrl = Array.isArray(output) ? output[0] : output;
-    
-    return NextResponse.json({ result: imageUrl });
+    // 2. Extract the URL exactly as the documentation shows: output[0].url()
+    // We check if it's an array and if the .url() method exists.
+    let resultUrl = "";
+    if (Array.isArray(output) && output.length > 0) {
+      // If the result is an object with a .url() function, call it.
+      resultUrl = typeof output[0].url === 'function' ? output[0].url() : output[0];
+    } else {
+      resultUrl = output;
+    }
+
+    console.log("SUCCESS! Extracted URL:", resultUrl);
+    return NextResponse.json({ result: resultUrl });
   } catch (error: any) {
-    console.error("API Error:", error);
+    console.error('API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
