@@ -3,18 +3,24 @@ import Replicate from 'replicate';
 
 export async function POST(req: Request) {
   try {
-    // The library automatically detects process.env.REPLICATE_API_TOKEN
     const replicate = new Replicate();
     
+    // Parse the body
     const body = await req.json();
-    const { image } = body;
+    const { image, prompt } = body;
 
-    // Use the updated model slug "google/nano-banana-2"
+    // Validate inputs
+    if (!image || !prompt) {
+      return NextResponse.json({ error: "Both image and prompt are required" }, { status: 400 });
+    }
+
+    // Call the model with the prompt
     const prediction = await replicate.run(
       "google/nano-banana-2",
       {
         input: {
           image: image,
+          prompt: prompt, // We now include the prompt!
         },
       }
     );
