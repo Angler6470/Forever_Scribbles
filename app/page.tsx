@@ -1,6 +1,5 @@
 'use client'; 
 
-import Image from 'next/image';
 import CompareSlider from './components/CompareSlider';
 import FAQAccordion from './components/FAQAccordion';
 import Uploader from './components/Uploader';
@@ -64,7 +63,11 @@ export default function Home() {
         </div>
       </section>
 
-      <Uploader />
+      <section id="upload" className="bg-white py-16 px-6">
+        <div className="mx-auto max-w-7xl">
+          <Uploader />
+        </div>
+      </section>
       <FAQAccordion />
     </main>
   );
