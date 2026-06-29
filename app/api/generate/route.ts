@@ -9,30 +9,36 @@ export async function POST(req: NextRequest) {
     if (!token) throw new Error('API token not configured');
 
     const replicate = new Replicate({ auth: token });
-    
-    // We are using the specific model ID from your provided API help file
+    const formData = await req.formData();
+    const file = formData.get('image');
+
+    if (!(file instanceof File)) throw new Error('No image provided');
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const base64 = buffer.toString('base64');
+    const dataUrl = `data:${file.type};base64,${base64}`;
+
+    // This model traces the edges of your provided image.
+    // We add a 'control_guidance_strength' to keep the trace tight and clean.
     const output: any = await replicate.run(
-      "paappraiser/retro-coloring-book:cbaf592788a0513ff5ca3beecdc0d9280fb44908771656f2adef630a263d9ebe",
+      "jagilley/controlnet-canny:aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613",
       {
         input: {
-          // We describe the content of your doodle so the AI creates a 
-          // high-quality, professional version of it.
-          prompt: "A simple coloring book drawing of athe exact subject, coloring book style, minimal clean lines, thick outlines, easy to color, white background.",
-          negative_prompt: "complex, realistic, color, gradient, shading, texture, wavy lines"
+          image: dataUrl,
+          prompt: "High-quality vector-style coloring book page, crisp solid black lines, pure white background, no shading, no texture.",
+          negative_prompt: "wavy lines, messy, paint texture, shading, gradient, realistic, complex, color",
+          // Adjusting control guidance ensures it ignores the paint texture 
+          // and focuses on the structural edges.
+          control_guidance_strength: 1.0,
+          canny_low_threshold: 100,
+          canny_high_threshold: 200
         }
       }
     );
 
-    // According to your help file, output is an array. 
-    // We check for the .url() method or direct array access.
-    let resultUrl = "";
-    if (Array.isArray(output)) {
-        // Use the first item's .url() if available, otherwise just use the item
-        resultUrl = typeof output[0].url === 'function' ? output[0].url() : output[0];
-    } else {
-        resultUrl = output;
-    }
-
+    // Extract the URL safely from the output array
+    const resultUrl = Array.isArray(output) ? output[0] : output;
+    
     return NextResponse.json({ result: resultUrl });
   } catch (error: any) {
     console.error('API Error:', error);
