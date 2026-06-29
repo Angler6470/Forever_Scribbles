@@ -14,12 +14,10 @@ export async function POST(req: NextRequest) {
 
     if (!(file instanceof File)) throw new Error('No image provided');
 
-    // Convert file to base64 Data URL
     const buffer = Buffer.from(await file.arrayBuffer());
     const base64 = buffer.toString('base64');
     const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // Using the exact model path and structure from the API help section
     const output: any = await replicate.run(
       "jagilley/controlnet-canny:aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613",
       {
@@ -30,9 +28,15 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // Based on the docs, output is an array. We grab the first result.
-    const resultUrl = Array.isArray(output) ? output[0] : output;
+    // CRITICAL: Extract the URL from the output array correctly
+    let resultUrl = "";
+    if (Array.isArray(output)) {
+        resultUrl = output[0]; 
+    } else {
+        resultUrl = output;
+    }
 
+    console.log("Result URL from AI:", resultUrl);
     return NextResponse.json({ result: resultUrl });
   } catch (error: any) {
     console.error('API Error:', error);
