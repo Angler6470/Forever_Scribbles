@@ -15,21 +15,18 @@ export async function POST(req: NextRequest) {
     const base64 = buffer.toString('base64');
     const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // 1. Create the prediction explicitly
+    // SWITCHED TO LINEART MODEL: This model ignores texture and focuses on outlines.
     const prediction = await replicate.predictions.create({
-      model: "jagilley/controlnet-canny",
-      version: "aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613",
+      model: "jagilley/controlnet-lineart",
+      version: "f4284523315a091533036413d7d748f2195821c97793d56d10c0e5a8767e7550",
       input: {
         image: dataUrl,
-        prompt: "A Black and white version of this image made into a coloring book page. Same line work. No color.",
+        prompt: "A professional coloring book page outline, clean thick solid lines, white background, no shading, no texture, high contrast.",
       }
     });
 
-    // 2. Wait for it to finish
     const result = await replicate.wait(prediction);
 
-    // 3. Extract output safely
-    // The model returns an array. We access the first element directly.
     const output = (result as any).output;
     const imageUrl = Array.isArray(output) ? output[0] : output;
 
