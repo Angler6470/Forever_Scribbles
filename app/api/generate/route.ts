@@ -118,7 +118,11 @@ export async function POST(req: NextRequest) {
 
     if (!resultImage) {
       console.error('Replicate returned no usable image output.', JSON.stringify(output, null, 2));
-      return NextResponse.json({ error: 'Replicate returned no usable image output.' }, { status: 500 });
+      return NextResponse.json({
+        result: null,
+        error: 'Replicate did not return a transformed image. The uploaded file was received, but the model output was empty.',
+        fallback: true,
+      }, { status: 200 });
     }
 
     return NextResponse.json({ result: resultImage });

@@ -59,11 +59,17 @@ export default function Uploader() {
 
       const json = await response.json();
 
-      if (!response.ok || !json.result) {
+      if (!response.ok) {
         throw new Error(json.error || 'Generation failed.');
       }
 
-      setResult(json.result);
+      if (json.result) {
+        setResult(json.result);
+      } else if (json.fallback) {
+        setError(json.error || 'The image was uploaded, but the model did not return a transformed result.');
+      } else {
+        throw new Error(json.error || 'Generation failed.');
+      }
 
       const nextUsage = freeUsage + 1;
       setFreeUsage(nextUsage);
