@@ -1,72 +1,69 @@
-'use client';
-
-import { useState } from 'react';
-import { supabase } from '@/lib/supabaseConfig';
+"use client";
+import React, { useState } from 'react';
 
 export default function Uploader() {
-  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
     try {
-      setUploading(true);
-      const file = event.target.files?.[0];
-      if (!file) return;
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const base64Image = reader.result as string;
+        const promptText = "Turn this into a crisp, clean coloring book page outline. Black and white only.";
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: base64Image,
+            prompt: promptText
+          }),
+        });
 
-      // 1. Upload to Supabase
-      const { error: uploadError } = await supabase.storage
-        .from('user-uploads')
-        .upload(filePath, file);
-      if (uploadError) throw uploadError;
+        const json = await response.json();
 
-      const { data: publicUrlData } = supabase.storage
-        .from('user-uploads')
-        .getPublicUrl(filePath);
-
-      // 2. Call your API to transform the image
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: publicUrlData.publicUrl }),
-      });
-
-      const json = await response.json();
-      
-      if (json.result) {
-        setResult(json.result); // Save the output URL to state
-      } else {
-        throw new Error(json.error || "Generation failed");
-      }
-    } catch (error) {
-      alert('Error processing image!');
-      console.error(error);
-    } finally {
-      setUploading(false);
+        if (response.ok && json.result) {
+          const finalImageUrl = Array.isArray(json.result) ? json.result[0] : json.result;
+          setResult(finalImageUrl);
+        } else {
+          setError(json.error || "Generation failed.");
+        }
+        setLoading(false);
+      };
+      reader.onerror = () => {
+        setError("Failed to read file.");
+        setLoading(false);
+      };
+    } catch (err: any) {
+      setError(err.message);
+      setLoading(false);
     }
   };
 
   return (
-    <div id="upload" className="max-w-xl mx-auto p-8 bg-white border border-slate-200 rounded-2xl my-12">
-      <h2 className="text-2xl font-bold mb-4">Upload your doodle</h2>
-      <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} className="..." />
-      
-      {uploading && <p className="mt-4 text-blue-600 font-bold">Transforming...</p>}
+    <div className="flex flex-col items-center justify-center p-4">
+      {loading ? (
+        <div className="text-xl font-bold animate-pulse">Making magic... ✨</div>
+      ) : (
+        <input type="file" accept="image/*" onChange={handleUpload} className="mb-4" />
+      )}
 
-      {/* 3. Display the Result with Watermark */}
+      {error && <div className="text-red-500 mt-2">Error: {error}</div>}
+
       {result && (
-        <div className="mt-8 relative">
-          <h3 className="font-bold mb-2">Your Coloring Page:</h3>
-          <div className="relative inline-block">
-            <img src={result} alt="Result" className="w-full rounded-lg" />
-            {/* Watermark Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
-              <img src="/watermark-placeholder.png" alt="Watermark" className="w-1/2" />
-            </div>
-          </div>
+        <div className="mt-6 flex flex-col items-center">
+          <h3 className="text-lg font-semibold mb-2">Your Coloring Page:</h3>
+          <img src={result} alt="Generated coloring page" className="max-w-md rounded-lg shadow-lg border border-gray-300" />
         </div>
       )}
     </div>
