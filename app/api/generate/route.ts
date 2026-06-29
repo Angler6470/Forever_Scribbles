@@ -20,8 +20,7 @@ export async function POST(req: NextRequest) {
     const dataUrl = `data:image/jpeg;base64,${base64}`;
 
     const prediction = await replicate.predictions.create({
-  // Use the model name without the specific version hash
-  model: "lucataco/controlnet-canny", 
+  model: "diffusers/controlnet-canny:c5319808a705e4d257e8445161405e3ec20092285517208cf36f2e825a09e07e",
   input: {
     image: dataUrl,
     prompt: "A Black and white coloring book page. Same line work as the original. No color, no shading, clean lines.",
