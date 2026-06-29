@@ -1,8 +1,14 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 const STORAGE_KEY = 'forever-scribbles-free-uploads';
 const FREE_LIMIT = 3;
+
+function getFreeUsage() {
+  if (typeof window === 'undefined') return 0;
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  return Number.isFinite(Number(stored)) ? Number(stored) : 0;
+}
 
 export default function Uploader() {
   const [loading, setLoading] = useState(false);
@@ -10,15 +16,21 @@ export default function Uploader() {
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [freeUsage, setFreeUsage] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    setFreeUsage(Number(stored) || 0);
+    setFreeUsage(getFreeUsage());
   }, []);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose a valid image file.');
+      return;
+    }
+    if (freeUsage >= FREE_LIMIT) {
+      setError('You have reached your 3 free image generations.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -28,51 +40,67 @@ export default function Uploader() {
     try {
       const formData = new FormData();
       formData.append('image', file);
+      formData.append('prompt', 'Turn this into a crisp, clean coloring book page outline. Black and white only.');
 
       const response = await fetch('/api/generate', {
         method: 'POST',
         body: formData,
       });
 
-      const responseText = await response.text();
-      let json;
-      try {
-        json = JSON.parse(responseText);
-      } catch (e) {
-        // If it fails to parse, it means the server sent HTML (a crash)
-        console.error("Server returned non-JSON:", responseText);
-        throw new Error("Server error: Check Vercel logs.");
-      }
-
-      if (!response.ok) throw new Error(json.error || 'Generation failed');
-
-      setResult(Array.isArray(json.result) ? json.result[0] : json.result);
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error || 'Generation failed.');
       
+      setResult(Array.isArray(json.result) ? json.result[0] : json.result);
       const nextUsage = freeUsage + 1;
       setFreeUsage(nextUsage);
-      localStorage.setItem(STORAGE_KEY, String(nextUsage));
+      window.localStorage.setItem(STORAGE_KEY, String(nextUsage));
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
-      e.target.value = '';
     }
   };
 
   return (
-    <div className="p-6 border rounded-2xl bg-white shadow-sm">
-      <h2 className="text-2xl font-bold mb-4">Upload your doodle</h2>
-      <input type="file" accept="image/*" onChange={handleUpload} disabled={loading} className="mb-4" />
-      
-      {loading && <p className="text-blue-600 font-bold animate-pulse">Making The Magic... ✨</p>}
-      {error && <p className="text-red-600 mt-2 font-medium">Error: {error}</p>}
-
-      {result && (
-        <div className="mt-6">
-          <h3 className="font-bold mb-2">Your Coloring Page:</h3>
-          <img src={result} alt="Generated" className="w-full rounded-lg shadow-md" />
+    <div className="w-full max-w-4xl mx-auto my-12 p-8 bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+      <div className="grid md:grid-cols-2 gap-10">
+        
+        {/* Left Side: Upload Controls */}
+        <div className="flex flex-col justify-center">
+          <h2 className="text-3xl font-bold text-slate-900 mb-2">Create a Coloring Page</h2>
+          <p className="text-slate-500 mb-8">Transform your child's drawing into high-quality line art in seconds.</p>
+          
+          <input type="file" ref={fileInputRef} onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])} className="hidden" accept="image/*" />
+          
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={loading}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2"
+          >
+            {loading ? "Processing..." : "Select Artwork"}
+          </button>
+          
+          <p className="text-xs text-slate-400 mt-4 text-center">Free generations left: {FREE_LIMIT - freeUsage}/{FREE_LIMIT}</p>
         </div>
-      )}
+
+        {/* Right Side: Preview & Output */}
+        <div className="relative min-h-[300px] bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
+          {loading ? (
+            <div className="text-center p-6">
+              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="font-semibold text-blue-600">Magic in progress...</p>
+            </div>
+          ) : result ? (
+            <img src={result} alt="Result" className="w-full h-full object-contain p-2" />
+          ) : selectedImage ? (
+            <img src={selectedImage} alt="Preview" className="w-full h-full object-contain p-2 opacity-60" />
+          ) : (
+            <p className="text-slate-400 text-sm">Upload an image to see the result</p>
+          )}
+        </div>
+      </div>
+      
+      {error && <div className="mt-6 p-4 bg-red-50 text-red-700 rounded-xl text-center font-medium">{error}</div>}
     </div>
   );
 }
