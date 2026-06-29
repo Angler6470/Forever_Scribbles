@@ -79,31 +79,62 @@ export default function Uploader() {
   const remaining = Math.max(0, FREE_LIMIT - freeUsage);
 
   return (
-    <div className="flex flex-col items-center justify-center p-4">
-      <div className="mb-4 text-center">
-        <p className="text-sm font-semibold text-slate-700">Upload a doodle and turn it into a coloring page.</p>
-        <p className="text-sm text-slate-500">Free generations left: {remaining}/{FREE_LIMIT}</p>
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white via-sky-50 to-blue-100 p-6 shadow-[0_20px_60px_-20px_rgba(15,23,42,0.35)] md:p-8">
+      <div className="text-center">
+        <div className="mb-3 inline-flex rounded-full bg-blue-600/10 px-3 py-1 text-sm font-semibold text-blue-700">
+          ✨ Turn doodles into keepsakes
+        </div>
+        <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+          Bring your child&apos;s art to life
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 sm:text-lg">
+          Upload a sketch, photo, or scribble and we&apos;ll transform it into a polished coloring page.
+        </p>
+        <p className="mt-3 text-sm font-medium text-slate-500">
+          Free generations left: {remaining}/{FREE_LIMIT}
+        </p>
       </div>
 
-      {loading ? (
-        <div className="text-xl font-bold animate-pulse">Making The Magic</div>
-      ) : (
-        <input type="file" accept="image/*" onChange={handleUpload} className="mb-4" />
-      )}
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <label className="group flex cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border-2 border-dashed border-blue-300 bg-white/80 px-6 py-12 text-center transition hover:border-blue-500 hover:bg-blue-50">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-3xl text-white shadow-lg shadow-blue-600/20">
+            ⬆
+          </div>
+          <span className="text-lg font-semibold text-slate-800">Choose an image</span>
+          <span className="mt-2 text-sm text-slate-500">PNG, JPG, or HEIC — anything your little artist made</span>
+          <span className="mt-5 inline-flex rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition group-hover:bg-blue-700">
+            Upload Image
+          </span>
+          <input type="file" accept="image/*" onChange={handleUpload} className="sr-only" />
+        </label>
 
-      {selectedImage && !loading && (
-        <div className="mt-3 mb-4 flex flex-col items-center">
-          <p className="mb-2 text-sm font-medium text-slate-600">Selected image</p>
-          <img src={selectedImage} alt="Selected upload" className="max-w-xs rounded-lg border border-slate-200 shadow-sm" />
+        <div className="rounded-[1.5rem] border border-slate-200 bg-slate-900 p-5 text-white shadow-inner">
+          {loading ? (
+            <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[1.25rem] border border-white/10 bg-white/10 text-center">
+              <div className="mb-3 h-12 w-12 animate-spin rounded-full border-4 border-white/25 border-t-white" />
+              <p className="text-xl font-bold">Making The Magic</p>
+              <p className="mt-2 text-sm text-slate-300">We&apos;re turning your image into something printable and beautiful.</p>
+            </div>
+          ) : selectedImage ? (
+            <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[1.25rem] border border-white/10 bg-white/10 p-4">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-300">Preview</p>
+              <img src={selectedImage} alt="Selected upload" className="max-h-56 w-full rounded-2xl object-contain" />
+            </div>
+          ) : (
+            <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[1.25rem] border border-dashed border-white/15 bg-white/5 px-4 text-center">
+              <p className="text-lg font-semibold">Your masterpiece will appear here</p>
+              <p className="mt-2 text-sm text-slate-300">Once uploaded, we&apos;ll preview it before generating your coloring page.</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
-      {error && <div className="mt-2 max-w-md text-center text-red-500">{error}</div>}
+      {error && <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-600">{error}</div>}
 
       {result && (
-        <div className="mt-6 flex flex-col items-center">
-          <h3 className="mb-2 text-lg font-semibold">Your Coloring Page:</h3>
-          <img src={result} alt="Generated coloring page" className="max-w-md rounded-lg border border-gray-300 shadow-lg" />
+        <div className="flex flex-col items-center rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-3 text-lg font-semibold text-slate-800">Your Coloring Page</h3>
+          <img src={result} alt="Generated coloring page" className="max-w-full rounded-[1.25rem] border border-slate-200 shadow-lg" />
         </div>
       )}
     </div>
