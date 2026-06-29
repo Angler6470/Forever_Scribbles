@@ -5,34 +5,36 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
+    const token = process.env.REPLICATE_API_TOKEN;
+    if (!token) throw new Error('API token not configured');
+
+    const replicate = new Replicate({ auth: token });
     const formData = await req.formData();
     const file = formData.get('image');
     if (!(file instanceof File)) throw new Error('No image provided');
 
-    // Convert file to base64
     const buffer = Buffer.from(await file.arrayBuffer());
     const base64 = buffer.toString('base64');
     const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // We use a modern, robust model that treats your input as a "structural guide"
-    // rather than an optional hint.
+    console.log("Sending image to Replicate...");
+
     const output: any = await replicate.run(
-      "black-forest-labs/flux-1.1-pro", 
+      "stability-ai/stable-diffusion-img2img:c46967525381f2679237090886c9b33a7e366e8574169542a2754636b04a9117",
       {
         input: {
-          prompt: "A clean, high-contrast, black-and-white coloring book page of this subject. Solid black lines, white background, no shading, no grayscale.",
-          prompt_upsampling: true,
           image: dataUrl,
-          // This ensures the output sticks strictly to the structure of your doodle
-          control_strength: 0.9 
+          prompt: "A high-quality black and white coloring book page of the subject, clean line art, white background, no shading.",
+          strength: 0.6 // How much to change the image (0.6 is good for tracing)
         }
       }
     );
 
-    return NextResponse.json({ result: output });
+    console.log("Replicate output:", output);
+    return NextResponse.json({ result: output[0] });
+
   } catch (error: any) {
-    console.error("API Error:", error);
+    console.error("SERVER-SIDE ERROR:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
