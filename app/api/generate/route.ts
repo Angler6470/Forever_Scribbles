@@ -23,9 +23,13 @@ function extractImageInput(image: unknown) {
   return null;
 }
 
+function looksLikeImageUrl(value: string) {
+  return /^https?:\/\//i.test(value) || value.startsWith('data:image/') || value.startsWith('blob:');
+}
+
 function extractResultImage(result: unknown): string | null {
   if (typeof result === 'string') {
-    return result;
+    return looksLikeImageUrl(result) ? result : null;
   }
 
   if (Array.isArray(result)) {
@@ -39,18 +43,21 @@ function extractResultImage(result: unknown): string | null {
   }
 
   if (result && typeof result === 'object') {
-    const candidate = (result as Record<string, unknown>).output
-      ?? (result as Record<string, unknown>).url
-      ?? (result as Record<string, unknown>).image
-      ?? (result as Record<string, unknown>).result
-      ?? (result as Record<string, unknown>).image_url;
+    const record = result as Record<string, unknown>;
 
-    if (typeof candidate === 'string') {
-      return candidate;
+    for (const key of ['output', 'url', 'image', 'result', 'image_url', 'images', 'imageUrls', 'urls', 'data']) {
+      const candidate = record[key];
+      const nested = extractResultImage(candidate);
+      if (nested) {
+        return nested;
+      }
     }
 
-    if (Array.isArray(candidate)) {
-      return extractResultImage(candidate);
+    for (const value of Object.values(record)) {
+      const nested = extractResultImage(value);
+      if (nested) {
+        return nested;
+      }
     }
   }
 
@@ -110,6 +117,7 @@ export async function POST(req: NextRequest) {
     const resultImage = extractResultImage(output);
 
     if (!resultImage) {
+      console.error('Replicate returned no usable image output.', JSON.stringify(output, null, 2));
       return NextResponse.json({ error: 'Replicate returned no usable image output.' }, { status: 500 });
     }
 
