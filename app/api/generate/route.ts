@@ -1,55 +1,39 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import Replicate from 'replicate';
 
 export const runtime = 'nodejs';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const token = process.env.REPLICATE_API_TOKEN;
-    if (!token) {
-      return NextResponse.json({ error: 'Replicate API token is not configured.' }, { status: 500 });
-    }
+    if (!token) return NextResponse.json({ error: 'Token missing' }, { status: 500 });
 
     const replicate = new Replicate({ auth: token });
-    const body = await req.json();
+    const formData = await req.formData();
+    const file = formData.get('image');
     
-    // Ensure prompt and image exist
-    const image = body.image;
-    const prompt = body.prompt || 'Turn this into a crisp, clean coloring book page outline. Black and white only.';
+    if (!(file instanceof File)) return NextResponse.json({ error: 'File missing' }, { status: 400 });
 
-    if (!image) {
-      return NextResponse.json({ error: 'An image is required.' }, { status: 400 });
-    }
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    // Run the model
-    const output = await replicate.run('google/nano-banana-2', {
-      input: {
-        image: image,
-        prompt: prompt,
-      },
+    // Create a prediction (asynchronous)
+    const prediction = await replicate.predictions.create({
+      model: "google/nano-banana-2",
+      input: { image: buffer, prompt: "Turn this into a crisp, clean coloring book page outline. Black and white only." },
     });
 
-    console.log("Replicate Raw Output:", JSON.stringify(output));
-
-    // For nano-banana-2, the output is typically an array of strings (URLs)
-    let resultImage: string | null = null;
-    
-    if (Array.isArray(output) && output.length > 0) {
-      resultImage = output[0];
-    } else if (typeof output === 'string') {
-      resultImage = output;
+    // Poll for completion (max 10 seconds for this demo)
+    let finalPrediction = prediction;
+    for (let i = 0; i < 10; i++) {
+        finalPrediction = await replicate.predictions.get(finalPrediction.id);
+        if (finalPrediction.status === 'succeeded') break;
+        if (finalPrediction.status === 'failed') throw new Error("Generation failed");
+        await new Promise(r => setTimeout(r, 1000));
     }
 
-    if (!resultImage) {
-      return NextResponse.json({
-        error: 'Replicate returned an empty result.',
-        debug: output
-      }, { status: 500 });
-    }
-
-    return NextResponse.json({ result: resultImage });
+    return NextResponse.json({ result: finalPrediction.output });
   } catch (error: any) {
-    console.error('API Error:', error);
-    return NextResponse.json({ error: error.message || 'Generation failed.' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
