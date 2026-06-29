@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { supabase } from '../../lib/supabaseConfig';
 
 export default function Uploader() {
   const [loading, setLoading] = useState(false);
@@ -15,37 +16,50 @@ export default function Uploader() {
     setResult(null);
 
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        const base64Image = reader.result as string;
-        const promptText = "Turn this into a crisp, clean coloring book page outline. Black and white only.";
+      // 1. Create a unique file name
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `uploads/${fileName}`;
 
-        const response = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            image: base64Image,
-            prompt: promptText
-          }),
-        });
+      // 2. Upload to your existing 'user-uploads' bucket
+      const { error: uploadError } = await supabase.storage
+        .from('user-uploads')
+        .upload(filePath, file);
 
-        const json = await response.json();
+      if (uploadError) {
+        throw new Error(`Supabase upload failed: ${uploadError.message}`);
+      }
 
-        if (response.ok && json.result) {
-          const finalImageUrl = Array.isArray(json.result) ? json.result[0] : json.result;
-          setResult(finalImageUrl);
-        } else {
-          setError(json.error || "Generation failed.");
-        }
-        setLoading(false);
-      };
-      reader.onerror = () => {
-        setError("Failed to read file.");
-        setLoading(false);
-      };
+      // 3. Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('user-uploads')
+        .getPublicUrl(filePath);
+
+      const imageUrl = publicUrlData.publicUrl;
+
+      // 4. Send to your API
+      const promptText = "Turn this into a crisp, clean coloring book page outline. Black and white only.";
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: imageUrl,
+          prompt: promptText
+        }),
+      });
+
+      const json = await response.json();
+
+      // 5. Display the result
+      if (response.ok && json.result) {
+        const finalImageUrl = Array.isArray(json.result) ? json.result[0] : json.result;
+        setResult(finalImageUrl);
+      } else {
+        throw new Error(json.error || "Generation failed.");
+      }
     } catch (err: any) {
       setError(err.message);
+    } finally {
       setLoading(false);
     }
   };
