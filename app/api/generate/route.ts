@@ -6,32 +6,40 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   try {
     const token = process.env.REPLICATE_API_TOKEN;
-    if (!token) throw new Error('Token missing');
+    if (!token) throw new Error('Replicate API token is not configured.');
 
     const replicate = new Replicate({ auth: token });
     const formData = await req.formData();
     const file = formData.get('image');
 
-    if (!(file instanceof File)) throw new Error('No image provided');
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: 'An image file is required.' }, { status: 400 });
+    }
 
-    // Reverting to Data URL format as this is the standard for most Replicate models
+    // Convert file to buffer as required by nano-banana-2
     const arrayBuffer = await file.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
-    const dataUrl = `data:image/jpeg;base64,${base64}`;
+    const buffer = Buffer.from(arrayBuffer);
 
-    const prediction = await replicate.predictions.create({
-  model: "diffusers/controlnet-canny:c5319808a705e4d257e8445161405e3ec20092285517208cf36f2e825a09e07e",
-  input: {
-    image: dataUrl,
-    prompt: "A Black and white coloring book page. Same line work as the original. No color, no shading, clean lines.",
-    num_inference_steps: 20
-  },
-});
+    // EXACTLY matching Replicate's recommended structure:
+    const output = await replicate.run("google/nano-banana-2", {
+      input: {
+        image: buffer,
+        prompt: "A Black and white version of this image made into a coloring book page. Same line work. No color.",
+      }
+    });
 
-    const result = await replicate.wait(prediction);
-    return NextResponse.json({ result: result.output });
+    // Handle the output correctly based on Replicate's docs:
+    // If output is an object with a URL() method, use it.
+    let imageUrl: string;
+    if (typeof output === 'object' && output !== null && 'url' in output) {
+        imageUrl = (output as any).url();
+    } else {
+        imageUrl = String(output);
+    }
+
+    return NextResponse.json({ result: imageUrl });
   } catch (error: any) {
-    console.error("API Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('API Error:', error);
+    return NextResponse.json({ error: error.message || 'Generation failed.' }, { status: 500 });
   }
 }
