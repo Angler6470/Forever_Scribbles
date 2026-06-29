@@ -1,128 +1,50 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import Replicate from 'replicate';
 
 export const runtime = 'nodejs';
 
-function normalizePrompt(prompt?: string | null) {
-  return prompt?.trim() || 'Turn this into a crisp, clean coloring book page outline. Black and white only.';
-}
-
-function extractImageInput(image: unknown) {
-  if (typeof image === 'string') {
-    return image;
-  }
-
-  if (image instanceof Buffer) {
-    return image;
-  }
-
-  if (image instanceof Uint8Array) {
-    return Buffer.from(image);
-  }
-
-  return null;
-}
-
-function looksLikeImageUrl(value: string) {
-  return /^https?:\/\//i.test(value) || value.startsWith('data:image/') || value.startsWith('blob:');
-}
-
-function extractResultImage(result: unknown): string | null {
-  if (typeof result === 'string') {
-    return looksLikeImageUrl(result) ? result : null;
-  }
-
-  if (Array.isArray(result)) {
-    for (const item of result) {
-      const nested = extractResultImage(item);
-      if (nested) {
-        return nested;
-      }
-    }
-    return null;
-  }
-
-  if (result && typeof result === 'object') {
-    const record = result as Record<string, unknown>;
-
-    for (const key of ['output', 'url', 'image', 'result', 'image_url', 'images', 'imageUrls', 'urls', 'data']) {
-      const candidate = record[key];
-      const nested = extractResultImage(candidate);
-      if (nested) {
-        return nested;
-      }
-    }
-
-    for (const value of Object.values(record)) {
-      const nested = extractResultImage(value);
-      if (nested) {
-        return nested;
-      }
-    }
-  }
-
-  return null;
-}
-
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const token = process.env.REPLICATE_API_TOKEN;
-
     if (!token) {
       return NextResponse.json({ error: 'Replicate API token is not configured.' }, { status: 500 });
     }
 
     const replicate = new Replicate({ auth: token });
-    const contentType = req.headers.get('content-type') || '';
-    let imageInput: unknown = null;
-    let prompt = 'Turn this into a crisp, clean coloring book page outline. Black and white only.';
-
-    if (contentType.includes('multipart/form-data')) {
-      const formData = await req.formData();
-      const file = formData.get('image');
-      const promptValue = formData.get('prompt');
-
-      prompt = normalizePrompt(promptValue?.toString());
-
-      if (!(file instanceof File)) {
-        return NextResponse.json({ error: 'An image file is required.' }, { status: 400 });
-      }
-
-      imageInput = Buffer.from(await file.arrayBuffer());
-    } else {
-      const body = await req.json().catch(() => null);
-      const image = body?.image;
-      prompt = normalizePrompt(body?.prompt);
-
-      if (!image) {
-        return NextResponse.json({ error: 'An image is required.' }, { status: 400 });
-      }
-
-      imageInput = image;
-    }
-
-    const image = extractImageInput(imageInput);
+    const body = await req.json();
+    
+    // Ensure prompt and image exist
+    const image = body.image;
+    const prompt = body.prompt || 'Turn this into a crisp, clean coloring book page outline. Black and white only.';
 
     if (!image) {
-      return NextResponse.json({ error: 'The uploaded image could not be processed.' }, { status: 400 });
+      return NextResponse.json({ error: 'An image is required.' }, { status: 400 });
     }
 
+    // Run the model
     const output = await replicate.run('google/nano-banana-2', {
       input: {
-        image,
-        prompt,
+        image: image,
+        prompt: prompt,
       },
     });
 
-    const resultImage = extractResultImage(output);
+    console.log("Replicate Raw Output:", JSON.stringify(output));
+
+    // For nano-banana-2, the output is typically an array of strings (URLs)
+    let resultImage: string | null = null;
+    
+    if (Array.isArray(output) && output.length > 0) {
+      resultImage = output[0];
+    } else if (typeof output === 'string') {
+      resultImage = output;
+    }
 
     if (!resultImage) {
-      console.error('Replicate returned no usable image output.', JSON.stringify(output, null, 2));
       return NextResponse.json({
-        result: null,
-        error: 'Replicate did not return a transformed image. The uploaded file was received, but the model output was empty.',
-        fallback: true,
-      }, { status: 200 });
+        error: 'Replicate returned an empty result.',
+        debug: output
+      }, { status: 500 });
     }
 
     return NextResponse.json({ result: resultImage });
