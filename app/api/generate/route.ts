@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         input: {
           // We describe the content of your doodle so the AI creates a 
           // high-quality, professional version of it.
-          prompt: "A large and simple drawing of an elephant, vintage coloring book style, minimal clean lines, thick outlines, easy to color, white background.",
+          prompt: "A simple coloring book drawing of athe exact subject, coloring book style, minimal clean lines, thick outlines, easy to color, white background.",
           negative_prompt: "complex, realistic, color, gradient, shading, texture, wavy lines"
         }
       }
