@@ -18,20 +18,19 @@ export async function POST(req: NextRequest) {
     const base64 = buffer.toString('base64');
     const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // REMOVED THE VERSION HASH. 
-    // Using just {owner}/{model} ensures you are always using the current, valid version.
-    const output: any = await replicate.run(
-      "paappraiser/retro-coloring-book",
+    // Using the stable, public Stability AI model
+    const output = await replicate.run(
+      "stability-ai/stable-diffusion-img2img:c46967525381f2679237090886c9b33a7e366e8574169542a2754636b04a9117",
       {
         input: {
-          image: dataUrl, // Pass your image as input
-          prompt: "A simple, clean coloring book page. Minimal black lines, white background, thick outlines, easy to color.",
-          negative_prompt: "complex, realistic, color, gradient, shading, texture, wavy lines"
+          image: dataUrl,
+          prompt: "A high-quality black and white coloring book page of the subject, clean line art, white background, no shading.",
+          strength: 0.5
         }
       }
     );
 
-    // Extract the URL safely
+    // The stable-diffusion-img2img model returns an array
     const resultUrl = Array.isArray(output) ? output[0] : output;
     
     return NextResponse.json({ result: resultUrl });
