@@ -5,27 +5,33 @@ export async function POST(req: Request) {
   try {
     const replicate = new Replicate();
     
-    // Parse the body
+    // Parse the incoming request
     const body = await req.json();
     const { image, prompt } = body;
 
-    // Validate inputs
+    // Validate that we have the data we need
     if (!image || !prompt) {
       return NextResponse.json({ error: "Both image and prompt are required" }, { status: 400 });
     }
 
-    // Call the model with the prompt
+    // Run the model
+    // Note: This returns the prediction object immediately
     const prediction = await replicate.run(
       "google/nano-banana-2",
       {
         input: {
           image: image,
-          prompt: prompt, // We now include the prompt!
+          prompt: prompt,
         },
       }
     );
 
-    return NextResponse.json({ result: prediction });
+    // Return the prediction so you can track it on your Replicate dashboard
+    return NextResponse.json({ 
+      message: "Processing started",
+      prediction: prediction 
+    });
+
   } catch (error: any) {
     console.error("API Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
