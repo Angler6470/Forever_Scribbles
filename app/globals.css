@@ -5,7 +5,7 @@
   --foreground: #0f172a;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -34,4 +34,32 @@ h2,
 h3,
 .font-display {
   font-family: var(--font-nunito), "Trebuchet MS", sans-serif;
+}
+
+@keyframes slide-colors {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+.animate-color-border {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    #3b82f6 0px,   /* Blue */
+    #3b82f6 15px,
+    transparent 15px,
+    transparent 20px,
+    #ef4444 20px,  /* Red */
+    #ef4444 35px,
+    transparent 35px,
+    transparent 40px,
+    #eab308 40px,  /* Yellow */
+    #eab308 55px,
+    transparent 55px,
+    transparent 60px
+  );
+  background-size: 200% 200%;
+  animation: slide-colors 2s linear infinite;
+  border-radius: 1rem;
 }

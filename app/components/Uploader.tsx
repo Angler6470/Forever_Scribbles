@@ -26,7 +26,6 @@ export default function Uploader() {
 
       if (!response.ok) throw new Error(json.error || 'Generation failed');
       
-      // Force result to be a string
       setResult(String(json.result));
     } catch (err: any) {
       console.error(err);
@@ -38,16 +37,44 @@ export default function Uploader() {
   return (
     <div className="w-full max-w-4xl mx-auto p-8 bg-white rounded-3xl border border-slate-100 shadow-sm">
       <div className="grid md:grid-cols-2 gap-10">
-        <div className="flex flex-col justify-center">
+        
+        {/* Left Side: The New Upload Button */}
+        <div className="flex flex-col justify-center items-start">
           <h2 className="text-3xl font-bold mb-4">Create a Coloring Page</h2>
-          <input type="file" onChange={handleUpload} accept="image/*" />
+          <label 
+            htmlFor="file-upload" 
+            className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-colors shadow-sm"
+          >
+            Select Your Drawing
+          </label>
+          <input 
+            id="file-upload" 
+            type="file" 
+            onChange={handleUpload} 
+            className="hidden" 
+            accept="image/*" 
+          />
         </div>
-        <div className="relative min-h-[300px] bg-slate-50 border-2 border-dashed flex items-center justify-center overflow-hidden">
-          {loading ? <p>Making Magic...</p> : result ? (
-            <img src={result} alt="Result" className="max-h-[500px] object-contain" />
-          ) : selectedImage ? (
-            <img src={selectedImage} alt="Preview" className="max-h-[500px] object-contain opacity-60" />
-          ) : <p>Upload an image</p>}
+
+        {/* Right Side: The Results Area with Animated Border */}
+        <div className={`relative min-h-[300px] rounded-2xl flex items-center justify-center p-1 ${!loading ? 'border-2 border-dashed border-slate-300 bg-slate-50' : ''}`}>
+          
+          {/* This div handles the animated colored dashes */}
+          {loading && <div className="animate-color-border"></div>}
+          
+          {/* Inner content box */}
+          <div className={`relative z-10 w-full h-full min-h-[290px] flex items-center justify-center rounded-xl overflow-hidden ${loading ? 'bg-slate-50' : ''}`}>
+            {loading ? (
+              <p className="text-slate-800 font-bold bg-white/90 px-6 py-2 rounded-lg shadow-sm backdrop-blur-sm">Making Magic...</p>
+            ) : result ? (
+              <img src={result} alt="Result" className="max-h-[500px] object-contain" />
+            ) : selectedImage ? (
+              <img src={selectedImage} alt="Preview" className="max-h-[500px] object-contain opacity-40" />
+            ) : (
+              <p className="text-slate-400 font-medium">Upload an image to see the result</p>
+            )}
+          </div>
+
         </div>
       </div>
     </div>
