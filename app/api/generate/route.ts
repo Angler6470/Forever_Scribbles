@@ -18,28 +18,28 @@ export async function POST(req: NextRequest) {
     const base64 = buffer.toString('base64');
     const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // 1. Run the model with the exact version hash provided in the API docs
+    // Refined input with better controls for cleaner lines
     const output: any = await replicate.run(
       "jagilley/controlnet-canny:aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613",
       {
         input: {
           image: dataUrl,
-          prompt: "A professional black and white coloring book page of the subject, clean line art, high contrast, white background.",
+          prompt: "A professional black and white coloring book page, clean line art, high contrast, white background, crisp vector style lines.",
+          num_inference_steps: 40,
+          guidance_scale: 7.5,
+          canny_low_threshold: 100,
+          canny_high_threshold: 200,
         }
       }
     );
 
-    // 2. Extract the URL exactly as the documentation shows: output[0].url()
-    // We check if it's an array and if the .url() method exists.
     let resultUrl = "";
     if (Array.isArray(output) && output.length > 0) {
-      // If the result is an object with a .url() function, call it.
-      resultUrl = typeof output[0].url === 'function' ? output[0].url() : output[0];
+      resultUrl = typeof output[0] === 'string' ? output[0] : output[0].url();
     } else {
       resultUrl = output;
     }
 
-    console.log("SUCCESS! Extracted URL:", resultUrl);
     return NextResponse.json({ result: resultUrl });
   } catch (error: any) {
     console.error('API Error:', error);
