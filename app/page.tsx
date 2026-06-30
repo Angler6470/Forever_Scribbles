@@ -3,6 +3,7 @@
 import CompareSlider from './components/CompareSlider';
 import FAQAccordion from './components/FAQAccordion';
 import Uploader from './components/Uploader';
+import Gallery from './components/Gallery';
 
 export default function Home() {
   return (
@@ -10,7 +11,10 @@ export default function Home() {
       {/* Header */}
       <header className="border-b border-slate-200 bg-white pt-8 pb-4">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4">
-          <img src="/logo.png" alt="Forever Scribbles" className="h-32 w-auto object-contain mb-6" />
+          {/* Logo with Spin and Link */}
+          <a href="/" className="inline-block transition-transform duration-500 hover:rotate-180 mb-6">
+            <img src="/logo.png" alt="Forever Scribbles" className="h-32 w-auto object-contain" />
+          </a>
           
           <nav className="flex flex-wrap justify-center gap-6 text-sm font-bold text-slate-600 uppercase tracking-widest">
             <a href="#hero" className="hover:text-blue-600">Home</a>
@@ -22,7 +26,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 py-20 flex flex-col items-center text-center gap-12">
+      <section id="hero" className="max-w-7xl mx-auto px-6 py-20 flex flex-col items-center text-center gap-12">
         <div className="max-w-3xl space-y-6">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
             Your child's art, forever.
@@ -35,9 +39,9 @@ export default function Home() {
           </a>
         </div>
         
-        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
+        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
            <CompareSlider beforeSrc="/1_before.png" afterSrc="/1_after.png" />
-           <CompareSlider beforeSrc="/2_before.png" afterSrc="/3_after.png" />
+           <CompareSlider beforeSrc="/2_before.png" afterSrc="/2_after.png" />
            <CompareSlider beforeSrc="/3_before.png" afterSrc="/3_after.png" />
         </div>
       </section>
@@ -63,12 +67,23 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Upload Section */}
       <section id="upload" className="bg-white py-16 px-6">
         <div className="mx-auto max-w-7xl">
           <Uploader />
         </div>
       </section>
-      <FAQAccordion />
+
+      {/* Gallery Section */}
+      <Gallery />
+
+      {/* FAQ Section */}
+      <section id="faq" className="py-16 px-6">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-4xl font-bold text-center mb-10">Frequently Asked Questions</h2>
+          <FAQAccordion />
+        </div>
+      </section>
     </main>
   );
 }

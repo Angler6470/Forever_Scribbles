@@ -35,10 +35,10 @@ export default function Uploader() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-8 bg-white rounded-3xl border border-slate-100 shadow-sm">
+    <div className="w-full max-w-7xl mx-auto p-8 bg-white rounded-3xl border border-slate-100 shadow-sm">
       <div className="grid md:grid-cols-2 gap-10">
         
-        {/* Left Side: The New Upload Button */}
+        {/* Left Side: Upload Controls */}
         <div className="flex flex-col justify-center items-start">
           <h2 className="text-3xl font-bold mb-4">Create a Coloring Page</h2>
           <label 
@@ -56,13 +56,11 @@ export default function Uploader() {
           />
         </div>
 
-        {/* Right Side: The Results Area with Animated Border */}
+        {/* Right Side: Results with Animated Border */}
         <div className={`relative min-h-[300px] rounded-2xl flex items-center justify-center p-1 ${!loading ? 'border-2 border-dashed border-slate-300 bg-slate-50' : ''}`}>
           
-          {/* This div handles the animated colored dashes */}
           {loading && <div className="animate-color-border"></div>}
           
-          {/* Inner content box */}
           <div className={`relative z-10 w-full h-full min-h-[290px] flex items-center justify-center rounded-xl overflow-hidden ${loading ? 'bg-slate-50' : ''}`}>
             {loading ? (
               <p className="text-slate-800 font-bold bg-white/90 px-6 py-2 rounded-lg shadow-sm backdrop-blur-sm">Making Magic...</p>
@@ -74,7 +72,6 @@ export default function Uploader() {
               <p className="text-slate-400 font-medium">Upload an image to see the result</p>
             )}
           </div>
-
         </div>
       </div>
     </div>
