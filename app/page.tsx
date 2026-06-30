@@ -3,12 +3,13 @@
 import CompareSlider from './components/CompareSlider';
 import FAQAccordion from './components/FAQAccordion';
 import Uploader from './components/Uploader';
+import ContactForm from './components/ContactForm';
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-gray-900 font-sans">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white pt-8 pb-4">
+      <header className="border-b border-slate-200 bg-white pt-8 pb-4 sticky top-0 z-50">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4">
           <a href="/" className="inline-block transition-transform duration-500 hover:rotate-180 mb-6">
             <img src="/logo.png" alt="Forever Scribbles" className="h-32 w-auto object-contain" />
@@ -17,8 +18,9 @@ export default function Home() {
           <nav className="flex flex-wrap justify-center gap-6 text-sm font-bold text-slate-600 uppercase tracking-widest">
             <a href="#hero" className="hover:text-blue-600">Home</a>
             <a href="#how-it-works" className="hover:text-blue-600">How it works</a>
-            <a href="#gallery" className="hover:text-blue-600">Gallery</a>
+            <a href="#upload" className="hover:text-blue-600">Create</a>
             <a href="#faq" className="hover:text-blue-600">FAQ</a>
+            <a href="#contact" className="hover:text-blue-600">Contact</a>
           </nav>
         </div>
       </header>
@@ -73,12 +75,18 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-16 px-6">
+      <section id="faq" className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
-          {/* Removed redundant <h2> here so it only shows once */}
+          <div className="text-center mb-12">
+            <p className="text-sm uppercase tracking-[0.3em] text-blue-600 font-bold">Need help?</p>
+            <h2 className="text-4xl font-bold mt-4">Frequently Asked Questions</h2>
+          </div>
           <FAQAccordion />
         </div>
       </section>
+
+      {/* Contact Section */}
+      <ContactForm />
     </main>
   );
 }
