@@ -60,6 +60,6 @@ h3,
     transparent 60px
   );
   background-size: 200% 200%;
-  animation: slide-colors 2s linear infinite;
+  animation: slide-colors 10s linear infinite;
   border-radius: 1rem;
 }
