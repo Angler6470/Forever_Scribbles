@@ -3,8 +3,6 @@
 import CompareSlider from './components/CompareSlider';
 import FAQAccordion from './components/FAQAccordion';
 import Uploader from './components/Uploader';
-import Gallery from './components/Gallery';
-
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-gray-900 font-sans">
@@ -73,9 +71,6 @@ export default function Home() {
           <Uploader />
         </div>
       </section>
-
-      {/* Gallery Section */}
-      <Gallery />
 
       {/* FAQ Section */}
       <section id="faq" className="py-16 px-6">
