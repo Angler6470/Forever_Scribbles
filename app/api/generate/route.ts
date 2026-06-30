@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
           prompt: "Bold, thick, clean black outlines on a pure white background, coloring book style, minimal line noise, high contrast, vector art style.",
           num_inference_steps: 40,
           guidance_scale: 7.5,
-          canny_low_threshold: 150,
-          canny_high_threshold: 250,
+          canny_low_threshold: 180,
+          canny_high_threshold: 280,
         }
       }
     );
