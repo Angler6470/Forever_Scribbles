@@ -20,19 +20,21 @@ export async function POST(req: NextRequest) {
 
     // Patched for Flux Dev ControlNet
     // This model is much more precise and creates cleaner lines than the previous Canny model.
-    const output: any = await replicate.run(
-      "xlabs-ai/flux-dev-controlnet:9a8db105db745f8b11ad3afe5c8bd892428b2a43ade0b67edc4e0ccd52ff2fda",
-      {
-        input: {
-          control_image: dataUrl,
-          prompt: "Professional coloring book page, clean black line art, white background, high contrast, bold lines, vector style, no shading, no gray, crisp edges.",
-          guidance_scale: 2.5,
-          control_strength: 0.8, // Increased to 0.8 to force the model to trace your input strictly
-          output_quality: 100,
-          negative_prompt: "low quality, ugly, distorted, artefacts, shading, gray, fuzzy, blurry, messy lines, watermark, text",
-        }
-      }
-    );
+    // Update this section in your route.ts
+const output: any = await replicate.run(
+  "xlabs-ai/flux-dev-controlnet:9a8db105db745f8b11ad3afe5c8bd892428b2a43ade0b67edc4e0ccd52ff2fda",
+  {
+    input: {
+      control_image: dataUrl,
+      // We keep the prompt generic, but tell it to follow the image
+      prompt: "A coloring book page of the subject in the provided image, bold thick black lines, pure white background, no shading, no grayscale.",
+      guidance_scale: 2.5, 
+      control_strength: 1.0, // Cranked to max to force tracing
+      output_quality: 100,
+      negative_prompt: "shading, gray, fuzzy, blurry, messy lines, watermark, text, distorted, low quality",
+    }
+  }
+);
 
     let resultUrl = "";
     // Accessing the file URL for Flux output
