@@ -15,35 +15,23 @@ export async function POST(req: NextRequest) {
     if (!(file instanceof File)) throw new Error('No image provided');
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const base64 = buffer.toString('base64');
-    const dataUrl = `data:${file.type};base64,${base64}`;
+    const dataUrl = `data:${file.type};base64,${buffer.toString('base64')}`;
 
-    // Patched for Flux Dev ControlNet
-    // This model is much more precise and creates cleaner lines than the previous Canny model.
-    // Update this section in your route.ts
-const output: any = await replicate.run(
-  "xlabs-ai/flux-dev-controlnet:9a8db105db745f8b11ad3afe5c8bd892428b2a43ade0b67edc4e0ccd52ff2fda",
-  {
-    input: {
-      control_image: dataUrl,
-      // We keep the prompt generic, but tell it to follow the image
-      prompt: "A coloring book page of the subject in the provided image, bold thick black lines, pure white background, no shading, no grayscale.",
-      guidance_scale: 2.5, 
-      control_strength: 1.0, // Cranked to max to force tracing
-      output_quality: 100,
-      negative_prompt: "shading, gray, fuzzy, blurry, messy lines, watermark, text, distorted, low quality",
-    }
-  }
-);
+    // Using SDXL ControlNet Canny - the gold standard for tracing
+    const output: any = await replicate.run(
+      "xlabs-ai/controlnet-canny:c1561084209587422f6d2e617d1e89df94682499d6910609b45667104b2a647d",
+      {
+        input: {
+          image: dataUrl,
+          prompt: "A high-quality coloring book page of an elephant, bold black lines, pure white background, crisp vector art, no shading, no gray, high contrast.",
+          num_inference_steps: 30,
+          guidance_scale: 5,
+          controlnet_conditioning_scale: 1.0, 
+        }
+      }
+    );
 
-    let resultUrl = "";
-    // Accessing the file URL for Flux output
-    if (Array.isArray(output) && output.length > 0) {
-      resultUrl = typeof output[0] === 'string' ? output[0] : output[0].url();
-    } else {
-      resultUrl = output;
-    }
-
+    let resultUrl = Array.isArray(output) ? output[0] : output;
     return NextResponse.json({ result: resultUrl });
   } catch (error: any) {
     console.error('API Error:', error);
