@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
           prompt: "Professional coloring book page, bold thick black lines, pure white background, extremely clean, no noise, vector art style, high contrast, centered.",
           num_inference_steps: 40,
           guidance_scale: 7.0, // Slightly reduced to prevent hallucination
-          canny_low_threshold: 150, // Higher threshold forces AI to ignore faint noise
-          canny_high_threshold: 250, // Higher threshold keeps only the solid lines
+          canny_low_threshold: 200, // Higher threshold forces AI to ignore faint noise
+          canny_high_threshold: 300, // Higher threshold keeps only the solid lines
         }
       }
     );
