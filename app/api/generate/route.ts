@@ -18,23 +18,24 @@ export async function POST(req: NextRequest) {
     const base64 = buffer.toString('base64');
     const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // Patched input for high accuracy and clean lines
+    // Patched for Flux Dev ControlNet
+    // This model is much more precise and creates cleaner lines than the previous Canny model.
     const output: any = await replicate.run(
-      "jagilley/controlnet-canny:aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613",
+      "xlabs-ai/flux-dev-controlnet:9a8db105db745f8b11ad3afe5c8bd892428b2a43ade0b67edc4e0ccd52ff2fda",
       {
         input: {
-          image: dataUrl,
-          prompt: "Professional coloring book page, bold thick black lines, pure white background, extremely clean, no noise, vector art style, high contrast, centered.",
-          num_inference_steps: 40,
-          guidance_scale: 7.0, // Slightly reduced to prevent hallucination
-          canny_low_threshold: 200, // Higher threshold forces AI to ignore faint noise
-          canny_high_threshold: 300, // Higher threshold keeps only the solid lines
+          control_image: dataUrl,
+          prompt: "Professional coloring book page, clean black line art, white background, high contrast, bold lines, vector style, no shading, no gray, crisp edges.",
+          guidance_scale: 2.5,
+          control_strength: 0.8, // Increased to 0.8 to force the model to trace your input strictly
+          output_quality: 100,
+          negative_prompt: "low quality, ugly, distorted, artefacts, shading, gray, fuzzy, blurry, messy lines, watermark, text",
         }
       }
     );
 
     let resultUrl = "";
-    // Robust URL extraction for Replicate output
+    // Accessing the file URL for Flux output
     if (Array.isArray(output) && output.length > 0) {
       resultUrl = typeof output[0] === 'string' ? output[0] : output[0].url();
     } else {
