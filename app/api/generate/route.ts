@@ -17,20 +17,21 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const dataUrl = `data:${file.type};base64,${buffer.toString('base64')}`;
 
-    // Using SDXL ControlNet Canny - the gold standard for tracing
+    // Using the official hash and input structure
     const output: any = await replicate.run(
-      "xlabs-ai/controlnet-canny:c1561084209587422f6d2e617d1e89df94682499d6910609b45667104b2a647d",
+      "xlabs-ai/flux-controlnet:017ca9c50e6f53e6510c8b1859ea112fbb83ee266c5ef6f461c05b4f1cc5bf63",
       {
         input: {
           image: dataUrl,
-          prompt: "A high-quality coloring book page of an elephant, bold black lines, pure white background, crisp vector art, no shading, no gray, high contrast.",
-          num_inference_steps: 30,
-          guidance_scale: 5,
-          controlnet_conditioning_scale: 1.0, 
+          prompt: "coloring book page of an elephant, bold black lines, clean white background, high contrast, crisp lines, vector style, no shading, no gray",
+          // The API expects these specific settings
+          guidance_scale: 2.5,
+          output_quality: 100,
         }
       }
     );
 
+    // Replicate returns an array of output URLs
     let resultUrl = Array.isArray(output) ? output[0] : output;
     return NextResponse.json({ result: resultUrl });
   } catch (error: any) {
